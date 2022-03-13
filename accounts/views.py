@@ -1,7 +1,8 @@
 from multiprocessing import context
-from django.shortcuts import render
-from django.http import HttpRequest, HttpResponse
+from django.shortcuts import redirect, render
+from django.http import HttpResponse
 from accounts.models import *
+from .forms import OrderForm
 
 
 # Create your views here.
@@ -29,4 +30,39 @@ def customer(request, pk_test):
     total_orders = orders.count()
     context = {'customer':customer, 'orders':orders, 'total_orders':total_orders}
 
-    return render(request, 'accounts/customer.html', context)          
+    return render(request, 'accounts/customer.html', context)      
+
+def createOrder(request):
+    form = OrderForm()
+    if request.method == 'POST':
+        form = OrderForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('/')
+
+    context = {'form':form}
+    return render(request, 'accounts/order_form.html', context)   
+
+def updateOrder(request, pk):
+    order = Order.objects.get(id=pk)
+    form = OrderForm(instance=order)
+
+    if request.method == 'POST':
+        form = OrderForm(request.POST, instance=order)
+        if form.is_valid():
+            form.save()
+            return redirect('/')
+
+    context = {'form':form}
+    return render(request, 'accounts/order_form.html', context)           
+
+def deleteOrder(request, pk):
+    order = Order.objects.get(id=pk)
+    
+    if request.method == 'POST':
+        order.delete()
+        return redirect('/')
+
+    order = Order.objects.get(id=pk)
+    context = {'item':order}
+    return render(request, 'accounts/delete.html', context)
