@@ -16,6 +16,12 @@ class OrderForm(ModelForm):
         model = Order
         fields = '__all__'
 
+class MakeOrderForm(ModelForm):
+    quantity = forms.IntegerField()
+    class Meta:
+        model = Order
+        fields = ['product']        
+
 class CreateUserForm(UserCreationForm):
     class Meta:
         model = User
