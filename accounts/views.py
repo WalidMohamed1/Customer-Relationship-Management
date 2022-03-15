@@ -4,12 +4,13 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
+from django.db.models import F
 
 # Create your views here.
 from .models import *
-from .forms import OrderForm, CreateUserForm, CustomerForm
-from .filter import OrderFilter
-from .decorators import unauthenticated_user, allowed_users, admin_only
+from .forms import *
+from .filter import *
+from .decorators import *
 
 
 @unauthenticated_user
@@ -57,13 +58,20 @@ def logoutUser(request):
 def home(request):
     customers = Customer.objects.all()
     orders = Order.objects.all()
+    last_orders = Order.objects.select_related('customer__user', 'product').prefetch_related('product__tags').all().order_by('-date_created')[0:5]
 
     totalOrders = orders.count()
     delivered = orders.filter(status='Delivered').count()
     pending = orders.filter(status='Pending').count()
 
-    context = {'orders':orders, 'customers':customers, 'totalOrders':totalOrders,
-    'delivered':delivered, 'pending':pending}
+    context = {
+        'orders':orders,
+        'customers':customers,
+        'last_orders': last_orders,
+        'totalOrders':totalOrders,
+        'delivered':delivered,
+        'pending':pending
+        }
     return render(request, 'accounts/dashboard.html',context)
 
 
@@ -93,7 +101,7 @@ def accountSettings(request):
             form.save()
 
     context = {'form':form}
-    return render(request, 'accounts/account_settings.html', context)    
+    return render(request, 'accounts/account_settings.html', context)   
 
 
 @login_required(login_url='login')
@@ -118,6 +126,29 @@ def customer(request, pk_test):
     return render(request, 'accounts/customer.html', context)      
 
 
+@login_required(login_url='login')
+@allowed_users(allowed_roles=['customer'])
+def MakeOrder(request):
+    customer = request.user.customer
+    form = MakeOrderForm()
+    if request.method == 'POST':
+        form = MakeOrderForm(request.POST)
+        if form.is_valid():
+            quantity = form.cleaned_data['quantity']
+            order = form.save(commit=False)
+            order.customer = customer
+            for product in range(quantity):
+                order.save()
+                order.pk += 1
+            Customer.objects.filter(pk=customer.id).update(customer_orders = F('customer_orders')+quantity)
+            return redirect('user-page')
+      
+        
+    context = {
+        'form' : form,
+    }
+    return render(request, 'accounts/make_order.html', context)
+
 
 @login_required(login_url='login')  
 @allowed_users(allowed_roles=['admin']) 
@@ -125,16 +156,14 @@ def createOrder(request, pk):
     OrderFormSet = inlineformset_factory(Customer, Order, fields=('product', 'status'), extra=10)
     customer = Customer.objects.get(id=pk)
     formset = OrderFormSet(queryset=Order.objects.none(), instance=customer)
-    #form = OrderForm(initial={'customer':customer})
     if request.method == 'POST':
-        #form = OrderForm(request.POST)
         formset = OrderFormSet(request.POST, instance=customer)
         if formset.is_valid():
             formset.save()
-            return redirect('/')
+        return redirect('customer',customer.id)
 
     context = {'formset':formset}
-    return render(request, 'accounts/order_form.html', context)   
+    return render(request, 'accounts/place_order.html', context)   
 
 
 @login_required(login_url='login') 
@@ -150,7 +179,7 @@ def updateOrder(request, pk):
             return redirect('/')
 
     context = {'form':form}
-    return render(request, 'accounts/order_form.html', context)           
+    return render(request, 'accounts/update_order.html', context)           
 
 
 @login_required(login_url='login')  
@@ -160,7 +189,7 @@ def deleteOrder(request, pk):
     
     if request.method == 'POST':
         order.delete()
-        return redirect('/')
+        return redirect('customer' ,order.customer.id)
 
     order = Order.objects.get(id=pk)
     context = {'item':order}
