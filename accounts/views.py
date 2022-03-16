@@ -15,20 +15,30 @@ from .decorators import *
 
 @unauthenticated_user
 def registerPage(request):
-        form = CreateUserForm()
-        if request.method == 'POST':
-            form = CreateUserForm(request.POST)
-            if form.is_valid():
-                user = form.save()
-                username = form.cleaned_data.get('username')
+    form = CreateUserForm()
+    if request.method == 'POST':
+        form = CreateUserForm(request.POST)
+        if form.is_valid():
 
-                messages.success(request, 'Account was created for ' + username)
+            my_group = Group.objects.filter(name='customer').count()
+            print(my_group)
 
-                return redirect('login')
-		
+            username = form.cleaned_data.get('username')
 
-        context = {'form':form}
-        return render(request, 'accounts/register.html', context)
+            if my_group == 0:
+                my_group = Group.objects.create(name='customer')
+            else:
+                my_group = Group.objects.get(name='customer')
+
+            user = form.save()
+            user = User.objects.get(username=username)
+            user.groups.add(my_group)
+            messages.success(request, 'Account is created successfully for '+ username)
+            return redirect('login')
+ 
+    context = {'form' : form}
+
+    return render(request, 'accounts/register.html', context)
 
 
 @unauthenticated_user
