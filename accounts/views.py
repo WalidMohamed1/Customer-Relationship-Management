@@ -32,7 +32,7 @@ def registerPage(request):
 
             user = form.save()
             user = User.objects.get(username=username)
-            user.groups.add(my_group)
+            user.groups.add(my_group) #Add this user to customers group
             messages.success(request, 'Account is created successfully for '+ username)
             return redirect('login')
  
@@ -68,6 +68,8 @@ def logoutUser(request):
 def home(request):
     customers = Customer.objects.all()
     orders = Order.objects.all()
+    #last_orders = Order.objects.all().order_by('-date_created')[0:5]
+    # To reduces the redundant columns in the original object
     last_orders = Order.objects.select_related('customer__user', 'product').prefetch_related('product__tags').all().order_by('-date_created')[0:5]
 
     totalOrders = orders.count()
@@ -199,7 +201,7 @@ def deleteOrder(request, pk):
     
     if request.method == 'POST':
         order.delete()
-        return redirect('customer' ,order.customer.id)
+        return redirect('/')
 
     order = Order.objects.get(id=pk)
     context = {'item':order}

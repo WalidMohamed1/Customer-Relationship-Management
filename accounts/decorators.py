@@ -6,7 +6,7 @@ def unauthenticated_user(view_func):
         if request.user.is_authenticated:
             return redirect('home')
         else:
-            return view_func(request, *args, **kwargs) #View func is a login page
+            return view_func(request, *args, **kwargs) #View func is a login or Register page
 
     return wrapper_func  
 
