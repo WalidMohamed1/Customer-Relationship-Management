@@ -14,15 +14,19 @@ urlpatterns = [
     path('user/', views.userPage, name='user-page'),
     path('account/', views.accountSettings, name='account'),
     path('products/', views.products, name='products'),
-    path('customer/<str:pk_test>/', views.customer, name='customer'),
+    path('create_product/', views.createProduct, name ='create_product'),
 
-    path("make_order/", views.MakeOrder, name="make_order"),
-
+    
     path('create_order/<str:pk>/', views.createOrder, name='create_order'),
     path('update_order/<str:pk>/', views.updateOrder, name='update_order'),
     path('delete_order/<str:pk>/', views.deleteOrder, name='delete_order'),
 
-    path('create_product/', views.createProduct, name ='create_product'),
+    path('customer/<str:pk_test>/', views.customer, name='customer'),
+    path('delete_customer_order/<int:id>', views.deleteCustomerOrder, name='delete_customer_order'),
+
+
+    path("make_order/", views.MakeOrder, name="make_order"),
+
 
     path('reset_password/',
      auth_views.PasswordResetView.as_view(template_name="accounts/password_reset.html"),

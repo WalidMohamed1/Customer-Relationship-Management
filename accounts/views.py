@@ -136,7 +136,22 @@ def customer(request, pk_test):
 
     context = {'customer':customer, 'orders':orders, 'total_orders':total_orders, 'myFilter':myFilter}
 
-    return render(request, 'accounts/customer.html', context)      
+    return render(request, 'accounts/customer.html', context)
+
+
+@login_required(login_url='login')
+@allowed_users(allowed_roles=['admin'])
+def createProduct(request):
+    ProductFormSet = modelformset_factory(Product, form=CreateProductForm, extra=5)
+    formset = ProductFormSet(queryset=Order.objects.none())
+    if request.method == 'POST':
+        formset = ProductFormSet(request.POST)
+        if formset.is_valid():
+            formset.save()
+            return redirect('products')
+    
+    context = {'formset':formset}
+    return render(request, 'accounts/create_product.html', context)          
 
 
 @login_required(login_url='login')
@@ -157,9 +172,7 @@ def MakeOrder(request):
             return redirect('user-page')
       
         
-    context = {
-        'form' : form,
-    }
+    context = {'form' : form}
     return render(request, 'accounts/make_order.html', context)
 
 
@@ -206,19 +219,19 @@ def deleteOrder(request, pk):
 
     order = Order.objects.get(id=pk)
     context = {'item':order}
-    return render(request, 'accounts/delete.html', context)
+    return render(request, 'accounts/delete_order.html', context)
 
 
-@login_required(login_url='login')
-@allowed_users(allowed_roles=['admin'])
-def createProduct(request):
-    ProductFormSet = modelformset_factory(Product, form=CreateProductForm, extra=5)
-    formset = ProductFormSet(queryset=Order.objects.none())
-    if request.method == 'POST':
-        formset = ProductFormSet(request.POST)
-        if formset.is_valid():
-            formset.save()
-            return redirect('products')
+@login_required(login_url='login')  
+@allowed_users(allowed_roles=['admin']) 
+def deleteCustomerOrder(request, id):
+    order = Order.objects.get(id=id)
     
-    context = {'formset':formset}
-    return render(request, 'accounts/create_product.html', context)
+    if request.method == 'POST':
+        order.delete()
+        return redirect('customer', order.customer.id)
+
+    context = {'order':order}
+    return render(request, 'accounts/delete_customer_order.html', context)    
+
+
