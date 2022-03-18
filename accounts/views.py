@@ -28,6 +28,7 @@ def registerPage(request):
 
             if my_group == 0:
                 my_group = Group.objects.create(name='customer')
+                Group.objects.create(name='admin')
             else:
                 my_group = Group.objects.get(name='customer')
 
