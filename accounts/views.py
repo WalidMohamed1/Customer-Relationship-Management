@@ -112,6 +112,7 @@ def updateCustomer(request):
         form = CustomerForm(request.POST, request.FILES, instance=customer)
         if form.is_valid():
             form.save()
+            return redirect('user-page')
 
     context = {'form':form}
     return render(request, 'accounts/account_settings.html', context)   
