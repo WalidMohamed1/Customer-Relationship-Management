@@ -1,5 +1,6 @@
+from multiprocessing import context
 from django.shortcuts import redirect, render
-from django.forms import inlineformset_factory
+from django.forms import formset_factory, inlineformset_factory, modelformset_factory
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -206,3 +207,18 @@ def deleteOrder(request, pk):
     order = Order.objects.get(id=pk)
     context = {'item':order}
     return render(request, 'accounts/delete.html', context)
+
+
+@login_required(login_url='login')
+@allowed_users(allowed_roles=['admin'])
+def createProduct(request):
+    ProductFormSet = modelformset_factory(Product, form=CreateProductForm, extra=5)
+    formset = ProductFormSet(queryset=Order.objects.none())
+    if request.method == 'POST':
+        formset = ProductFormSet(request.POST)
+        if formset.is_valid():
+            formset.save()
+            return redirect('products')
+    
+    context = {'formset':formset}
+    return render(request, 'accounts/create_product.html', context)

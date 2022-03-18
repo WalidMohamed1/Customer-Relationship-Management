@@ -1,0 +1,23 @@
+{% extends 'accounts/main.html' %}
+{% load static %}
+{% block content %}
+
+<div class="row">
+    <div class="col-md">
+        <div class="card card-body">
+            <h5>Products</h5>
+            <form action="" method="POST">
+				{% csrf_token %}
+				{{ formset.management_form }}
+				{% for form in formset %}
+					{{form}}
+					<hr>
+				{% endfor %}	
+				<input class="btn btn-success" type="submit" name="Submit">
+                <a float="  right" class='btn btn-info' style="text-align: right; margin-left :400px" href="{% url 'products' %}">Back To Products</a>
+			</form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
