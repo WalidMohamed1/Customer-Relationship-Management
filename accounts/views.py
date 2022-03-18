@@ -104,7 +104,7 @@ def userPage(request):
 
 @login_required(login_url='login')
 @allowed_users(allowed_roles=['customer']) 
-def accountSettings(request):
+def updateCustomer(request):
     customer = request.user.customer
     form = CustomerForm(instance=customer)
 
